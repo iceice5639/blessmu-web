@@ -100,7 +100,7 @@
         return; // คำสั่ง return อยู่ในฟังก์ชัน window.onload
       }
 
-      fetch(`https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?token=${token}`)
+      fetch(`https://script.google.com/macros/s/https://script.google.com/macros/s/AKfycbzwkW9h_qmBHS85UMhiuAiq-ZU5QD3Fy4AALQYqOmDBfPsLBojsx2wDwOCImBr9hkcRcg/exec/exec?token=${token}`)
         .then(res => res.json())
         .then(data => {
           if (data.valid && !data.used) {
@@ -132,7 +132,7 @@
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token');
 
-      fetch(`https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?name=${number}&token=${token}`)
+      fetch(`https://script.google.com/macros/s/https://script.google.com/macros/s/AKfycbzwkW9h_qmBHS85UMhiuAiq-ZU5QD3Fy4AALQYqOmDBfPsLBojsx2wDwOCImBr9hkcRcg/exec/exec?name=${number}&token=${token}`)
         .then(res => res.text())
         .then(html => {
           const parser = new DOMParser();
