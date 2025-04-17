@@ -1,1 +1,178 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>สุ่มไพ่ BLESSMU</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #fff8f0;
+      padding: 20px;
+    }
+    input {
+      padding: 10px;
+      font-size: 16px;
+      width: 200px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 10px;
+      background-color: #ff9900;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    .card-container {
+      margin-top: 20px;
+      display: inline-block;
+    }
+    .card {
+      width: 200px;
+      height: 300px;
+      transition: transform 0.8s;
+      cursor: pointer;
+      position: relative;
+    }
+    .card.flip {
+      transform: rotateY(180deg);
+    }
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    .front {
+      background: white;
+    }
+    .front img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .back {
+      background: #fffbe8;
+      transform: rotateY(180deg);
+      padding: 10px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    #error {
+      color: red;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
 
+  <div id="main" style="display: none;">
+    <h2>กรอกเบอร์โทรเพื่อสุ่มไพ่</h2>
+    <input type="tel" id="number" placeholder="เบอร์โทร (10 หลัก)" maxlength="10">
+    <br>
+    <button id="drawButton" onclick="drawCard()" disabled>สุ่มไพ่</button>
+    <div id="result"></div>
+  </div>
+  <div id="error"></div>
+
+  <script>
+    // รันโค้ดเมื่อหน้าเว็บโหลดเสร็จ
+    window.onload = function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+      const drawButton = document.getElementById("drawButton");
+      const errorDiv = document.getElementById("error");
+      const mainDiv = document.getElementById("main");
+
+      if (!token) {
+        errorDiv.innerHTML = "<p>กรุณาสแกน QR Code เพื่อเข้าถึง</p>";
+        return; // คำสั่ง return อยู่ในฟังก์ชัน window.onload
+      }
+
+      fetch(`https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?token=${token}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.valid && !data.used) {
+            drawButton.disabled = false;
+            mainDiv.style.display = "block";
+            errorDiv.innerHTML = "";
+          } else {
+            errorDiv.innerHTML = "<p>QR Code นี้ถูกใช้ไปแล้วหรือไม่ถูกต้อง</p>";
+          }
+        })
+        .catch(err => {
+          errorDiv.innerHTML = "<p>เกิดข้อผิดพลาด: " + err + "</p>";
+        });
+    };
+
+    function drawCard() {
+      const numberInput = document.getElementById("number");
+      const number = numberInput.value.trim();
+
+      if (!number || !/^\d{10}$/.test(number)) {
+        alert("กรุณากรอกเบอร์โทร 10 หลัก");
+        return;
+      }
+
+      const drawButton = document.getElementById("drawButton");
+      drawButton.disabled = true;
+      document.getElementById("result").innerHTML = "<p>กำลังสุ่มไพ่...</p>";
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+
+      fetch(`https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?name=${number}&token=${token}`)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+
+          const h2 = doc.querySelector("h2");
+          const img = doc.querySelector("img");
+          const p = doc.querySelector("p");
+
+          if (!h2 || !img || !p) {
+            document.getElementById("result").innerHTML = "<p>ไม่พบข้อมูลไพ่</p>";
+            drawButton.disabled = false;
+            return;
+          }
+
+          const title = h2.innerText;
+          const imgSrc = img.src;
+          const prediction = p.innerText;
+
+          document.getElementById("result").innerHTML = `
+            <div class="card-container">
+              <div class="card" onclick="this.classList.toggle('flip')">
+                <div class="card-face front">
+                  <img src="${imgSrc}" alt="Tarot Card">
+                </div>
+                <div class="card-face back">
+                  <h3>${title}</h3>
+                  <p>${prediction}</p>
+                </div>
+              </div>
+            </div>
+          `;
+          drawButton.disabled = false;
+        })
+        .catch(err => {
+          document.getElementById("result").innerHTML = "เกิดข้อผิดพลาด: " + err;
+          drawButton.disabled = false;
+        });
+    }
+  </script>
+
+</body>
+</html>
